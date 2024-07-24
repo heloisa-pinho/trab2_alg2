@@ -245,6 +245,7 @@ int mergeSR(int v[], int esq, int meio, int dir, uint64_t *numComparacoes){
     int* vEsq = (int*)malloc(tamE * sizeof(int));
     int* vDir = (int*)malloc(tamD * sizeof(int));
 
+    //preenche os vetores auxiliares
     for (int i = 0; i < tamE; i++)
         vEsq[i] = v[esq + i];
     for (int i = 0; i < tamD; i++)
@@ -264,12 +265,14 @@ int mergeSR(int v[], int esq, int meio, int dir, uint64_t *numComparacoes){
         (*numComparacoes)++;
     }
     
+    // Copia os elementos restantes de vEsq, se houver
     while (i < tamE){
         v[k] = vEsq[i];
         i++;
         k++;
     }
     
+    // Copia os elementos restantes de vDir, se houver
     while (j < tamD){
         v[k] = vDir[j];
         j++;
@@ -283,53 +286,26 @@ int mergeSR(int v[], int esq, int meio, int dir, uint64_t *numComparacoes){
 }
 
 // Função auxiliar que implementa o MergeSort não-recursivo utilizando três pilhas
-int auxmergeSortSR(int v[], size_t tam, uint64_t *numComparacoes){
-    if (tam <= 1)
-        return 0;
-    
-    int* pilhaE = (int*)malloc(tam * sizeof(int));
-    int* pilhaD = (int*)malloc(tam * sizeof(int));
-    int* pilhaM = (int*)malloc(tam * sizeof(int));
-    int topo = -1;
 
-    if ((pilhaE == NULL || pilhaE == NULL || pilhaM == NULL)){
-        printf("Erro,falha ao alocar memoria.\n");
-        return 0;
-    }
-    
-    pilhaE[++topo] = 0;
-    pilhaD[topo] = tam - 1;
-    pilhaM[topo] = -1;
-    
-    while (topo >= 0){
-        int esq = pilhaE[topo];
-        int dir = pilhaD[topo];
-        int meio = pilhaM[topo];
-        topo--;
-        
-        if (meio == -1){
-            if (esq < dir) {
-                meio = esq + (dir - esq) / 2;
-                pilhaE[++topo] = esq;
-                pilhaD[topo] = dir;
-                pilhaM[topo] = meio;
-                pilhaE[++topo] = esq;
-                pilhaD[topo] = meio;
-                pilhaM[topo] = -1;
-                pilhaE[++topo] = meio + 1;
-                pilhaD[topo] = dir;
-                pilhaM[topo] = -1;
+void auxmergeSortSR(int vetor[], int tam, uint64_t *nComp) {
+    int largura, esquerdaInicio, meio, direitaFim;
+
+    for (largura = 1; largura <= tam - 1; largura = 2 * largura) {
+        for (esquerdaInicio = 0; esquerdaInicio < tam - 1; esquerdaInicio += 2 * largura) {
+            meio = esquerdaInicio + largura - 1;
+            direitaFim = esquerdaInicio + 2 * largura - 1;
+
+            if (meio >= tam) {
+                meio = tam - 1;
             }
-        } else {
-            *numComparacoes+= mergeSR(v, esq, meio, dir,numComparacoes);
+
+            if (direitaFim >= tam) {
+                direitaFim = tam - 1;
+            }
+
+            mergeSR(vetor, esquerdaInicio, meio, direitaFim, nComp);
         }
     }
-    
-    free(pilhaE);
-    free(pilhaD);
-    free(pilhaM);
-    
-    return 1;
 }
 
 uint64_t mergeSortSR(int vetor[], size_t tam){
@@ -343,44 +319,46 @@ uint64_t mergeSortSR(int vetor[], size_t tam){
 //--- Quick Sort Iterativo---
 
 // Função auxiliar que implementa o QuickSort não-recursivo utilizando pilha
-int auxQuickSortSR(int v[], int tam, uint64_t *numComparacoes ){
+
+int auxQuickSortSR(int v[], int tam, uint64_t *numComparacoes) {
     if (tam <= 1)
         return 0;
 
-    int *pilha = (int *)malloc(tam * sizeof(int));
+    int *pilhaIni = (int *)malloc(tam * sizeof(int));
+    int *pilhaFim = (int *)malloc(tam * sizeof(int));
 
-    if (pilha == NULL){
-        printf("Erro,falha ao alocar memoria.\n");
+    if (pilhaIni == NULL || pilhaFim == NULL) {
+        printf("Erro, falha ao alocar memória.\n");
         return 0;
     }
 
     int topo = -1;
 
     // Empilha os índices iniciais
-    pilha[++topo] = 0;
-    pilha[++topo] = tam - 1;
+    pilhaIni[++topo] = 0;
+    pilhaFim[topo] = tam - 1;
 
-    while (topo >= 0){
-
+    while (topo >= 0) {
         // Desempilha os índices dos sub-arrays
-        int fim = pilha[topo--];
-        int ini = pilha[topo--];
+        int fim = pilhaFim[topo];
+        int ini = pilhaIni[topo--];
         int p = particiona(v, ini, fim, numComparacoes);
 
         // Se houver elementos à esquerda do pivô, empilha os índices dos elementos menores que p
-        if (p - 1 > ini){
-            pilha[++topo] = ini;
-            pilha[++topo] = p - 1;
+        if (p - 1 > ini) {
+            pilhaIni[++topo] = ini;
+            pilhaFim[topo] = p - 1;
         }
 
         // Se houver elementos à direita do pivô, empilha os índices dos elementos maiores que p
-        if (p + 1 < fim){
-            pilha[++topo] = p + 1;
-            pilha[++topo] = fim;
+        if (p + 1 < fim) {
+            pilhaIni[++topo] = p + 1;
+            pilhaFim[topo] = fim;
         }
     }
 
-    free(pilha);
+    free(pilhaIni);
+    free(pilhaFim);
 
     return 1;
 }
